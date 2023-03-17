@@ -1,21 +1,23 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
 #import <React/RCTBridge.h>
-#import <React/RCTJSInvokerModule.h>
 
 /**
  * RCTEventEmitter is an abstract base class to be used for modules that emit
  * events to be observed by JS.
  */
-@interface RCTEventEmitter : NSObject <RCTBridgeModule, RCTJSInvokerModule>
+@interface RCTEventEmitter : NSObject <RCTBridgeModule, RCTInvalidating>
 
 @property (nonatomic, weak) RCTBridge *bridge;
-@property (nonatomic, copy, nonnull) void (^invokeJS)(NSString *module, NSString *method, NSArray *args);
+@property (nonatomic, weak) RCTModuleRegistry *moduleRegistry;
+@property (nonatomic, weak) RCTViewRegistry *viewRegistry_DEPRECATED;
+
+- (instancetype)initWithDisabledObservation;
 
 /**
  * Override this method to return an array of supported event names. Attempting
@@ -30,6 +32,8 @@
  */
 - (void)sendEventWithName:(NSString *)name body:(id)body;
 
+- (BOOL)canSendEvents_DEPRECATED;
+
 /**
  * These methods will be called when the first observer is added and when the
  * last observer is removed (or when dealloc is called), respectively. These
@@ -37,6 +41,8 @@
  */
 - (void)startObserving;
 - (void)stopObserving;
+
+- (void)invalidate NS_REQUIRES_SUPER;
 
 - (void)addListener:(NSString *)eventName;
 - (void)removeListeners:(double)count;
